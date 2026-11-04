@@ -12,6 +12,9 @@ jobs:
         with:
           node-version: '22'
       - run: npm install
+      - run: npx eas-cli init --account r0s34nn --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       - run: npx eas-cli build --platform android --profile preview --non-interactive --no-wait
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
