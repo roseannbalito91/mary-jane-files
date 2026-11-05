@@ -7,7 +7,7 @@
     "userInterfaceStyle": "light",
     "android": {
       "package": "com.maryjanefiles.records",
-      "versionCode": 2,
+      "versionCode": 3,
       "icon": "./assets/mary-jane-logo.png"
     },
     "assetBundlePatterns": [
