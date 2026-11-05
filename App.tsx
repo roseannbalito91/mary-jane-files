@@ -42,7 +42,7 @@ export default function App(){
  const printedOn=new Date().toLocaleString('en-PH',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
  const html=`<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>
  @page{size:A4;margin:14mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#092451;margin:0;font-size:11px}
- .brand{text-align:center;font-family:cursive;font-style:italic;font-size:38px;color:#940C48;margin:0 0 8px;border-bottom:5px solid #9ed6f7;padding:6px}
+ .brand{text-align:center;font-family:cursive;font-style:italic;font-size:38px;color:#082D69;margin:0 0 8px;border-bottom:5px solid #9ed6f7;padding:6px}
  .ribbon{text-align:center;background:#bfe5fa;color:#092451;font-size:19px;font-weight:bold;letter-spacing:1px;padding:10px;margin:10px 0}
  .subtitle{text-align:center;font-size:15px;font-weight:bold;margin:12px 0}
  .meta{width:100%;margin-bottom:18px;border-collapse:collapse}.meta td{padding:5px 7px;border-bottom:1px solid #92b8d2}.meta td:first-child{font-weight:bold;width:105px}
@@ -50,13 +50,13 @@ export default function App(){
  th,td{border:1px solid #8ca9be;padding:7px 5px;text-align:left}th{background:#bfe5fa;font-weight:bold}
  .num{text-align:center;width:36px}thead{display:table-header-group}tr{break-inside:avoid}section{margin-bottom:18px}
  .footer{text-align:center;color:#347FB7;font-size:22px;margin-top:24px}
- </style></head><body><h1 class="brand">Mary Jane Files ♡</h1><div class="ribbon">LISTING REPORT</div>
+ </style></head><body><h1 class="brand">Mary Jane Files</h1><div class="ribbon">LISTING REPORT</div>
  <div class="subtitle">SELECTED FOLDER RECORDS</div><table class="meta"><tbody>
  <tr><td>Folder(s)</td><td>${escapeHtml(chosen.map(f=>f.name).join(', '))}</td></tr>
  <tr><td>Sort Order</td><td>${escapeHtml(sortLabel)}</td></tr>
  <tr><td>Total Records</td><td>${total}</td></tr>
  <tr><td>Printed On</td><td>${escapeHtml(printedOn)}</td></tr>
- </tbody></table>${sections}<div class="footer">❧ ♡ ❧</div></body></html>`;
+ </tbody></table>${sections}<div class="footer">❧ ❧</div></body></html>`;
  try{await Print.printAsync({html});}catch{Alert.alert('Print unavailable','Unable to open the print dialog.');}
  };
  const goBack=()=>{if(screen==='calculator'){setScreen(previous);return;}if(screen==='print'){setScreen(folderId?'folder':'home');return;}if(screen==='personForm'){setScreen('folder');return;}if(screen==='addresses'){setScreen(folderId?'folder':'home');return;}if(screen==='folderForm'){setScreen('home');return;}setScreen('home')};
