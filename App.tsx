@@ -2,6 +2,7 @@ import React, {useEffect, useMemo, useState} from 'react';
 import {Alert, Image, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, View} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Print from 'expo-print';
+import * as Application from 'expo-application';
 import {useFonts, Sacramento_400Regular} from '@expo-google-fonts/sacramento';
 
 type Folder = {id:string; name:string};
@@ -11,6 +12,8 @@ const INITIAL_ADDRESSES=['BAYBAY 1','BAYBAY 2','BAYBAY 3','PANDAN','KIBRADA','TA
 type Screen = 'home'|'folder'|'folderForm'|'personForm'|'calculator'|'print'|'addresses';
 type SortMode = 'oldest'|'youngest'|'alphabetical';
 const escapeHtml=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+const ACTIVATION_URL='https://jfrsmfjcaarlwawonbnr.supabase.co/functions/v1/activate-license';
+const ACTIVATION_STORAGE='mary-jane-files-activation-v1';
 const BLUE='#347FB7', NAVY='#123F63', PALE='#EAF5FF', LIGHT='#A9D5F5';
 const uid=()=>String(Date.now())+Math.random().toString(36).slice(2);
 const validDate=(s:string)=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(s))return false;const [y,m,d]=s.split('-').map(Number);const x=new Date(y,m-1,d);return x.getFullYear()===y&&x.getMonth()===m-1&&x.getDate()===d&&x<=new Date();};
@@ -20,6 +23,12 @@ function IconButton({icon,onPress,danger=false}:{icon:string,onPress:()=>void,da
 function Button({label,onPress,light=false}:{label:string,onPress:()=>void,light?:boolean}){return <Pressable onPress={onPress} style={[styles.button,light&&{backgroundColor:LIGHT}]}><Text style={[styles.buttonText,light&&{color:NAVY}]}>{label}</Text></Pressable>}
 export default function App(){
  const [fontsLoaded]=useFonts({Sacramento_400Regular});
+ const [activationState,setActivationState]=useState<'checking'|'locked'|'active'>('checking');
+ const [activationKey,setActivationKey]=useState('');
+ const [activationBusy,setActivationBusy]=useState(false);
+ const [activationError,setActivationError]=useState('');
+ useEffect(()=>{AsyncStorage.getItem(ACTIVATION_STORAGE).then(v=>setActivationState(v==='active'?'active':'locked')).catch(()=>setActivationState('locked'));},[]);
+ const activate=async()=>{if(activationBusy)return;const key=activationKey.trim().toUpperCase();if(!/^MJF-[A-Z0-9]{4,8}-[A-Z0-9]{4,8}$/.test(key)){setActivationError('Enter a valid activation key.');return;}setActivationBusy(true);setActivationError('');try{const deviceId=Application.getAndroidId();if(!deviceId)throw new Error('Cannot identify this Android device.');const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),15000);let response:Response;try{response=await fetch(ACTIVATION_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({license_key:key,device_id:deviceId}),signal:controller.signal});}finally{clearTimeout(timeout);}const result=await response.json();if(!response.ok||result.activated!==true)throw new Error(result.message||result.error||'Activation failed.');await AsyncStorage.setItem(ACTIVATION_STORAGE,'active');setActivationState('active');setActivationKey('');}catch(e){setActivationError(e instanceof Error?e.message:'Unable to activate. Check your internet connection.');}finally{setActivationBusy(false);}};
  const [clockNow,setClockNow]=useState(new Date());
  useEffect(()=>{const timer=setInterval(()=>setClockNow(new Date()),1000);return ()=>clearInterval(timer)},[]);
  const clockDate=clockNow.toLocaleDateString('en-PH',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
@@ -75,6 +84,7 @@ export default function App(){
  const savePerson=()=>{const name=personName.trim(),phone=mobile.trim();if(!name)return Alert.alert('Required','Enter a full name.');if(!validDate(dob))return Alert.alert('Birth date','Enter a valid past or present date in YYYY-MM-DD format.');if(!addressId||!addresses.some(a=>a.id===addressId))return Alert.alert('Required','Select an address.');if(!gender)return Alert.alert('Required','Select a gender.');if(!phone)return Alert.alert('Required','Enter a mobile number.');if(editPerson)setPeople(a=>a.map(p=>p.id===editPerson?{...p,name,dob,mobile:phone,addressId,gender}:p));else if(folderId)setPeople(a=>[...a,{id:uid(),folderId,name,dob,mobile:phone,addressId,gender}]);setScreen('folder')};
  const deletePerson=(p:Person)=>Alert.alert('Delete person?',`Delete ${p.name}?`,[{text:'CANCEL',style:'cancel'},{text:'DELETE',style:'destructive',onPress:()=>setPeople(a=>a.filter(x=>x.id!==p.id))}]);
  const calc=(k:string)=>{if(k==='C'){setDisplay('0');setLhs(null);setOp(null);setNewNumber(false);return;}if('0123456789.'.includes(k)){setDisplay(d=>newNumber?(k==='.'?'0.':k):k==='.'?(d.includes('.')?d:d+'.'):(d==='0'?k:d+k));setNewNumber(false);return;}if(['+','−','×','÷'].includes(k)){setLhs(Number(display));setOp(k);setNewNumber(true);return;}if(k==='='&&op&&lhs!==null){const n=Number(display),result=op==='+'?lhs+n:op==='−'?lhs-n:op==='×'?lhs*n:n===0?NaN:lhs/n;setDisplay(Number.isFinite(result)?String(Number(result.toPrecision(12))):'Error');setLhs(null);setOp(null);setNewNumber(true);}};
+ if(activationState!=='active')return <SafeAreaView style={styles.safe}><StatusBar barStyle="dark-content" backgroundColor={PALE}/><View style={{flex:1,justifyContent:'center',padding:24,gap:16}}><Text style={{fontSize:42,color:NAVY,textAlign:'center',fontFamily:fontsLoaded?'Sacramento_400Regular':undefined}}>Mary Jane Files</Text><Text style={{fontSize:22,fontWeight:'900',color:NAVY,textAlign:'center'}}>ACTIVATE YOUR APP</Text><Text style={{color:NAVY,textAlign:'center'}}>Enter the lifetime activation key provided by the seller. Internet is required for first activation.</Text>{activationState==='checking'?<Text style={{textAlign:'center',color:NAVY}}>Checking activation…</Text>:<><TextInput style={styles.input} value={activationKey} onChangeText={setActivationKey} autoCapitalize="characters" autoCorrect={false} placeholder="MJF-XXXX-XXXXXXXX" placeholderTextColor="#637F93" editable={!activationBusy}/>{!!activationError&&<Text style={{color:'#B91C1C',textAlign:'center'}}>{activationError}</Text>}<Button label={activationBusy?'ACTIVATING…':'ACTIVATE'} onPress={activate}/></>}<Text style={{color:'#637F93',textAlign:'center',fontSize:12}}>One license per phone. Contact the seller to transfer a license.</Text></View></SafeAreaView>;
  return <SafeAreaView style={styles.safe}><StatusBar barStyle="dark-content" backgroundColor={PALE}/><KeyboardAvoidingView style={{flex:1}} behavior={Platform.OS==='ios'?'padding':undefined}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
  <View style={styles.clockBar}><Text style={styles.clockDate}>◷  {clockDate}</Text><Text style={styles.clockTime}>{clockTime}</Text></View>
  <Image source={require('./assets/bookshelf-with-books-biography-adventure-novel-poem-fantasy-love-story-detective-art-romance-banner-for-library-book-store-genre-of-literature-illustration-in-flat-style-vector.jpg')} resizeMode="cover" style={styles.banner}/><View style={styles.header}><Text style={[styles.appTitle,fontsLoaded&&{fontFamily:'Sacramento_400Regular'}]}>Mary Jane Files</Text></View>
