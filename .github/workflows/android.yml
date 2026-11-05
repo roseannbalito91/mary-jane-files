@@ -12,6 +12,8 @@ jobs:
         with:
           node-version: '22'
       - run: npm install
+      - run: python3 -m pip install --user Pillow
+      - run: python3 scripts/make_logo.py
       - run: npx eas-cli init --account r0s34nn --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
