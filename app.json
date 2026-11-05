@@ -1,1 +1,18 @@
-{"expo":{"name":"Mary Jane Files","slug":"mary-jane-files","version":"1.0.0","orientation":"portrait","userInterfaceStyle":"light","android":{"package":"com.maryjanefiles.records","versionCode":1},"assetBundlePatterns":["**/*"]}}
+{
+  "expo": {
+    "name": "Mary Jane Files",
+    "slug": "mary-jane-files",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "android": {
+      "package": "com.maryjanefiles.records",
+      "versionCode": 2,
+      "icon": "./assets/mary-jane-logo.png"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "icon": "./assets/mary-jane-logo.png"
+  }
+}
